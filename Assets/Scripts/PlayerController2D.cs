@@ -15,6 +15,7 @@ public class PlayerController2D : MonoBehaviour
     private Rigidbody2D rb;
     private float moveInput;
     private bool isGrounded;
+    private bool facingRight; 
 
     void Awake()
     {
@@ -40,7 +41,21 @@ public class PlayerController2D : MonoBehaviour
         {
             Jump();
         }
+
+        if (moveInput==1 &!facingRight)
+        {
+            Flip();
+        }  
+
+        else if (moveInput==-1 & facingRight)
+        {
+            Flip();
+        }      
     }
+
+
+
+
 
     void FixedUpdate()
     {
@@ -63,5 +78,14 @@ public class PlayerController2D : MonoBehaviour
 
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
+    }
+
+    // sağa sola döndür
+    void Flip()
+    {
+        facingRight = !facingRight;
+        Vector3 currentScale = transform.localScale;
+        currentScale.x *= -1;
+        transform.localScale = currentScale;
     }
 }
