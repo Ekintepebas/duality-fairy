@@ -42,33 +42,35 @@ public class PlayerController2D : MonoBehaviour
         );
 
         // Jump
-        if (Input.GetKeyDown(KeyCode.Space)) //&& isGrounded)
+        if (Input.GetKeyDown(KeyCode.Space)&& isGrounded)
         {
             Jump();
         }
 
         //Flip
-        if (moveInput==1 &!facingRight)
+        if (moveInput==1 &&!facingRight)
         {
             Flip();
         }  
 
-        else if (moveInput==-1 & facingRight)
+        else if (moveInput==-1 && facingRight)
         {
             Flip();
         } 
 
         //Walking
-        /*
-        if (moveInput != 0)
+        walking.SetBool("isGrounded", isGrounded);
+        
+        
+        if (moveInput != 0 && isGrounded)
         {
-            animator.SetBool("isWalking", true);
+            walking.SetBool("isWalking", true);
         }
         else
         {
-            animator.SetBool("isWalking", false);
+            walking.SetBool("isWalking", false);
         }     
-        */
+        
     }
 
 
