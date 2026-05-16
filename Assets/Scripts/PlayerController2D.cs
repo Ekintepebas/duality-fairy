@@ -28,6 +28,7 @@ public class PlayerController2D : MonoBehaviour
         moveInput = Input.GetAxisRaw("Horizontal");
 
         // Ground check
+        Debug.Log(groundCheckRadius);
         isGrounded = Physics2D.OverlapCircle(
             groundCheck.position,
             groundCheckRadius,
@@ -35,7 +36,7 @@ public class PlayerController2D : MonoBehaviour
         );
 
         // Jump
-        if (Input.GetKeyDown(KeyCode.Space))// && isGrounded)
+        if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
         {
             Jump();
         }
