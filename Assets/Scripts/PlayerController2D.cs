@@ -15,7 +15,7 @@ public class PlayerController2D : MonoBehaviour
     private Rigidbody2D rb;
     private float moveInput;
     private bool isGrounded;
-    private bool facingRight; 
+    private bool facingRight = true; 
 
     void Awake()
     {
