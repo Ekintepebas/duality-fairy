@@ -16,6 +16,13 @@ public class PlayerController2D : MonoBehaviour
     private float moveInput;
     private bool isGrounded;
 
+    [Header("Wind")]
+    public bool isInWindZone;
+    public float windStrength = 3f;
+
+    [HideInInspector]
+    public Vector2 windForce;
+
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -36,7 +43,7 @@ public class PlayerController2D : MonoBehaviour
         );
 
         // Jump
-        if (Input.GetKeyDown(KeyCode.Space)) //&& isGrounded)
+        if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
         {
             Jump();
         }
@@ -50,6 +57,7 @@ public class PlayerController2D : MonoBehaviour
     void Move()
     {
         rb.linearVelocity = new Vector2(moveInput * moveSpeed, rb.linearVelocity.y);
+        rb.linearVelocity += windForce; // * Time.fixedDeltaTime;
     }
 
     void Jump()
