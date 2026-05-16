@@ -6,6 +6,13 @@ public class PlayerController2D : MonoBehaviour
     public float moveSpeed = 6f;
     public float jumpForce = 12f;
 
+    public float flyTime = 3;
+    public float presentFlyingTime;
+    public bool isFlying = false;
+    public int level;
+
+    private float normalGravity;
+
     [Header("Ground Check")]
     public Transform groundCheck;
     public float groundCheckRadius = 0.2f;
@@ -21,16 +28,18 @@ public class PlayerController2D : MonoBehaviour
     private Rigidbody2D rb;
     private float moveInput;
     private bool isGrounded;
-    private bool facingRight = true; 
+    private bool facingRight = true;
 
     // yürüme animasyonu
-    private Animator walking; 
+    private Animator walking;
 
 
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         walking = GetComponent<Animator>();
+        normalGravity = rb.gravityScale;
+        level = 1;
     }
 
     void Update()
@@ -49,67 +58,63 @@ public class PlayerController2D : MonoBehaviour
         }
 
         //Flip
-        if (moveInput==1 &!facingRight)
+        if (moveInput == 1 & !facingRight)
         {
             Flip();
-        }  
-
-        else if (moveInput==-1 & facingRight)
-        {
-            Flip();
-        } 
-
-        //Walking
-        /*
-        if (moveInput != 0)
-        {
-            animator.SetBool("isWalking", true);
         }
-        else
+
+        else if (moveInput == -1 & facingRight)
         {
-            animator.SetBool("isWalking", false);
-        }     
-        */
+            Flip();
+        }
+
+        //Fly
+        if (Input.GetKey(KeyCode.P) && !isFlying)
+        {
+            isFlying = true;
+            presentFlyingTime = 0f;
+        }
+
+        if (isFlying)
+        {
+            presentFlyingTime += Time.deltaTime;
+
+            if (presentFlyingTime >= flyTime)
+            {
+                isFlying = false;
+                rb.gravityScale = normalGravity;
+            }
+        }
+
     }
-
-
-
-
 
     void FixedUpdate()
     {
         Move();
     }
 
-    bool IsBlockedByWall(Vector2 direction)
-    {
-        RaycastHit2D hit = Physics2D.Raycast(
-            transform.position,
-            direction,
-            wallCheckDistance,
-            groundLayer
-        );
-
-        return hit.collider != null;
-    }
-
     void Move()
     {
-        Vector2 finalWind = windForce;
-
-        if (windForce.x < 0 && IsBlockedByWall(Vector2.left))
+        if (isFlying)
         {
-            finalWind.x = 0;
-        }
-        else if (windForce.x > 0 && IsBlockedByWall(Vector2.right))
-        {
-            finalWind.x = 0;
-        }
+            float verticalInput = Input.GetAxisRaw("Vertical");
 
-        rb.linearVelocity = new Vector2(
+            rb.gravityScale = 0;
+
+            rb.linearVelocity = new Vector2(
+            moveInput * moveSpeed + windForce.x,
+            verticalInput * moveSpeed + windForce.y
+            );
+        }
+        else
+        {
+            Vector2 finalWind = windForce;
+
+            rb.linearVelocity = new Vector2(
             moveInput * moveSpeed + finalWind.x,
             rb.linearVelocity.y + finalWind.y
         );
+        }
     }
 
     void Jump()
