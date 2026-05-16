@@ -10,8 +10,9 @@ public class PlayerController2D : MonoBehaviour
     public float presentFlyingTime;
     public bool isFlying = false;
     public int level;
-
     private float normalGravity;
+    public float cooldownTime = 3f;
+    private float cooldownTimer = 0f;
 
     [Header("Ground Check")]
     public Transform groundCheck;
@@ -69,7 +70,27 @@ public class PlayerController2D : MonoBehaviour
         }
 
         //Fly
-        if (Input.GetKey(KeyCode.P) && !isFlying)
+        if (cooldownTimer > 0f)
+        {
+            cooldownTimer -= Time.deltaTime;
+        }
+        if (level == 1)
+        {
+            flyTime = 0f;
+        }
+        else if (level == 2)
+        {
+            flyTime = 5f;
+        }
+        else if (level == 3)
+        {
+            flyTime = 10f;
+        }
+        else
+        {
+            flyTime = Mathf.Infinity;
+        }
+        if (Input.GetKey(KeyCode.P) && !isFlying && cooldownTimer <= 0f && level >= 2)
         {
             isFlying = true;
             presentFlyingTime = 0f;
@@ -83,6 +104,7 @@ public class PlayerController2D : MonoBehaviour
             {
                 isFlying = false;
                 rb.gravityScale = normalGravity;
+                cooldownTimer = cooldownTime;
             }
         }
 
