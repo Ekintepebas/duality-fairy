@@ -17,6 +17,7 @@ public class PlayerController2D : MonoBehaviour
     private float normalGravity;
 
     [Header("Ground Check")]
+    [Tooltip("Inspector'dan Zemin Katmanını seçmeyi UNUTMAYIN!")]
     public LayerMask groundLayer;
     private float coyoteTime = 0.15f;
     private float coyoteCounter;
@@ -46,12 +47,21 @@ public class PlayerController2D : MonoBehaviour
         normalGravity = rb.gravityScale;
     }
 
+    void Start()
+    {
+        // Eğer Unity Inspector panelinde "Ground Layer" seçilmemişse Konsola hata mesajı gönder.
+        if (groundLayer.value == 0)
+        {
+            Debug.LogError("DİKKAT: 'Ground Layer' seçilmemiş! Yürüme animasyonunun çalışması için Inspector'dan Player'a tıklayın, Ground Layer kısmını 'Default' (veya zemin katmanınız neyse) olarak seçin.");
+        }
+    }
+
     void Update()
     {
         // Girdileri Alıyoruz
         moveInput = Input.GetAxisRaw("Horizontal");
 
-        // 1. ZEMİN KONTROLÜ (BoxCast - İlk koddaki gelişmiş versiyon)
+        // 1. ZEMİN KONTROLÜ (BoxCast)
         Vector2 boxSize = new Vector2(col.bounds.size.x * 0.7f, 0.08f);
         RaycastHit2D hit = Physics2D.BoxCast(
             col.bounds.center,
@@ -77,23 +87,22 @@ public class PlayerController2D : MonoBehaviour
                 isGrounded = false;
         }
 
-        // 2. ZIPLAMA (Uçmuyorsa ve Coyote Time aktifse)
+        // 2. ZIPLAMA
         if (Input.GetKeyDown(KeyCode.Space) && coyoteCounter > 0f && !isFlying)
         {
             Jump();
         }
 
-        // 3. YÖN DEĞİŞTİRME (Flip)
+        // 3. YÖN DEĞİŞTİRME
         if (moveInput > 0 && !facingRight) Flip();
         else if (moveInput < 0 && facingRight) Flip();
 
-        // 4. UÇMA SÜRESİ VE COOLDOWN HESAPLAMA
+        // 4. UÇMA KONTROLÜ
         if (cooldownTimer > 0f)
         {
             cooldownTimer -= Time.deltaTime;
         }
 
-        // Seviyeye göre uçuş süresi belirleme
         switch (level)
         {
             case 1: flyTime = 0f; break;
@@ -102,14 +111,12 @@ public class PlayerController2D : MonoBehaviour
             default: flyTime = Mathf.Infinity; break;
         }
 
-        // Uçuşu Başlatma (P tuşu, bekleme süresi bittiyse ve Level 2+ ise)
         if (Input.GetKeyDown(KeyCode.P) && !isFlying && cooldownTimer <= 0f && level >= 2)
         {
             isFlying = true;
             presentFlyingTime = 0f;
         }
 
-        // Uçuş Süresi Kontrolü
         if (isFlying)
         {
             presentFlyingTime += Time.deltaTime;
@@ -120,12 +127,15 @@ public class PlayerController2D : MonoBehaviour
             }
         }
 
-        // 5. ANIMATOR KONTROLLERİ (Flicker/Kırpışma önleyen mantık)
+        // 5. ANIMATOR KONTROLLERİ
         bool yururken = moveInput != 0 && isGrounded && !isFlying;
         
-        animator.SetBool("isGrounded", isGrounded);
-        animator.SetBool("isWalking", yururken);
-        animator.SetBool("isFlying", isFlying); // Eğer animator'da varsa kullanırsın
+        if (animator != null)
+        {
+            animator.SetBool("isGrounded", isGrounded);
+            animator.SetBool("isWalking", yururken);
+            animator.SetBool("isFlying", isFlying);
+        }
     }
 
     void FixedUpdate()
@@ -140,7 +150,6 @@ public class PlayerController2D : MonoBehaviour
             float verticalInput = Input.GetAxisRaw("Vertical");
             rb.gravityScale = 0;
 
-            // Uçarken dikey ve yatay hareket + rüzgar
             rb.linearVelocity = new Vector2(
                 moveInput * moveSpeed + windForce.x,
                 verticalInput * moveSpeed + windForce.y
@@ -148,7 +157,6 @@ public class PlayerController2D : MonoBehaviour
         }
         else
         {
-            // Normal yürürken yatay hareket + ruced, dikeyde yerçekimi + rüzgar y
             rb.linearVelocity = new Vector2(
                 moveInput * moveSpeed + windForce.x,
                 rb.linearVelocity.y + windForce.y
@@ -182,13 +190,11 @@ public class PlayerController2D : MonoBehaviour
     {
         if (col == null) return;
 
-        // Sarı renkli BoxCast Zemin Kontrol Alanı çizimi
         Gizmos.color = Color.yellow;
         Vector2 boxSize = new Vector2(col.bounds.size.x * 0.7f, 0.08f);
         Vector3 boxCenter = col.bounds.center + Vector3.down * (col.bounds.extents.y + 0.04f);
         Gizmos.DrawWireCube(boxCenter, boxSize);
 
-        // Kırmızı renkli Duvar Kontrol Çizgileri
         Gizmos.color = Color.red;
         Gizmos.DrawLine(transform.position, transform.position + Vector3.left * wallCheckDistance);
         Gizmos.DrawLine(transform.position, transform.position + Vector3.right * wallCheckDistance);
