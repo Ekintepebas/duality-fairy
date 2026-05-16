@@ -16,11 +16,10 @@ public class PlayerController2D : MonoBehaviour
     private float moveInput;
     private bool isGrounded;
 
-    [Header("Wind")]
-    public bool isInWindZone;
-    public float windStrength = 3f;
-
-    [HideInInspector]
+    [Header("Wind (Okunur-Sadece Kontrol İçin)")]
+    // Bu değerler artık WindZone scripti tarafından dışarıdan set edilir.
+    public bool isInWindZone; 
+    [HideInInspector] // Editörde görünmesine gerek yok, WindZone verecek.
     public Vector2 windForce;
 
     void Awake()
@@ -30,12 +29,10 @@ public class PlayerController2D : MonoBehaviour
 
     void Update()
     {
-        Debug.Log(isGrounded);
         // Input
         moveInput = Input.GetAxisRaw("Horizontal");
 
         // Ground check
-        Debug.Log(groundCheckRadius);
         isGrounded = Physics2D.OverlapCircle(
             groundCheck.position,
             groundCheckRadius,
@@ -56,8 +53,9 @@ public class PlayerController2D : MonoBehaviour
 
     void Move()
     {
+        // Normal hareket ve rüzgarın gücünü birleştir
         rb.linearVelocity = new Vector2(moveInput * moveSpeed, rb.linearVelocity.y);
-        rb.linearVelocity += windForce; // * Time.fixedDeltaTime;
+        rb.linearVelocity += windForce; 
     }
 
     void Jump()
