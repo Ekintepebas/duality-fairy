@@ -40,7 +40,7 @@ public class PlayerController2D : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         walking = GetComponent<Animator>();
         normalGravity = rb.gravityScale;
-        level = 1;
+        level = 2;
     }
 
     void Update()
