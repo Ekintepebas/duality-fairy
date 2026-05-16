@@ -42,7 +42,7 @@ public class PlayerController2D : MonoBehaviour
         );
 
         // Jump
-        if (Input.GetKeyDown(KeyCode.Space)) //&& isGrounded)
+        if (Input.GetKeyDown(KeyCode.Space)&& isGrounded)
         {
             Jump();
         }
