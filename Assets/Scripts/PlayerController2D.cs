@@ -18,13 +18,13 @@ public class PlayerController2D : MonoBehaviour
     private bool facingRight = true; 
 
     // yürüme animasyonu
-    private Animator walking; 
+    private Animator animator; 
 
 
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
-        walking = GetComponent<Animator>();
+        animator = GetComponent<Animator>();
     }
 
     void Update()
@@ -48,27 +48,27 @@ public class PlayerController2D : MonoBehaviour
         }
 
         //Flip
-        if (moveInput==1 &&!facingRight)
+        if (moveInput>0 &&!facingRight)
         {
             Flip();
         }  
 
-        else if (moveInput==-1 && facingRight)
+        else if (moveInput<0 && facingRight)
         {
             Flip();
         } 
 
         //Walking
-        walking.SetBool("isGrounded", isGrounded);
+        animator.SetBool("isGrounded", isGrounded);
         
         
         if (moveInput != 0 && isGrounded)
         {
-            walking.SetBool("isWalking", true);
+            animator.SetBool("isWalking", true);
         }
         else
         {
-            walking.SetBool("isWalking", false);
+            animator.SetBool("isWalking", false);
         }     
         
     }

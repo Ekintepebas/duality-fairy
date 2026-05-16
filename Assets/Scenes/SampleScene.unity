@@ -441,17 +441,17 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0.05455351, y: 0.0181849}
+  m_Offset: {x: -0.44530344, y: -0.23174405}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
-    pivot: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5932039, y: 0.5591526}
     oldSize: {x: 7.25, y: 9.06}
     newSize: {x: 7.24, y: 9.63}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 7.291835, y: 9.183023}
+  m_Size: {x: 8.291549, y: 9.68288}
   m_EdgeRadius: 0
 --- !u!212 &1091478866
 SpriteRenderer:
