@@ -1,5 +1,7 @@
 
+using System;
 using UnityEngine;
+using static UnityEngine.Rigidbody2D;
 
 public class PlayerController2D : MonoBehaviour
 {
@@ -14,6 +16,7 @@ public class PlayerController2D : MonoBehaviour
 
     private Rigidbody2D rb;
     private float moveInput;
+    private float verticalInput;
     private bool isGrounded;
 
     [Header("Wind")]
@@ -23,9 +26,27 @@ public class PlayerController2D : MonoBehaviour
     [HideInInspector]
     public Vector2 windForce;
 
+    [Header("Flight")]
+    public bool canFly = true;
+
+    public KeyCode flyKey = KeyCode.P;
+
+    public float flyDuration = 5f;
+    public float flyCooldown = 3f;
+
+    public float glideMoveSpeed = 5f;
+    public float glideVerticalSpeed = 4f;
+    public float glideFallSpeed = -1.5f;
+
+    private bool isFlying;
+
+    private float flyTimer;
+    private float cooldownTimer;
+
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        flyTimer = flyDuration;
     }
 
     void Update()
@@ -33,8 +54,11 @@ public class PlayerController2D : MonoBehaviour
         Debug.Log(isGrounded);
         // Input
         moveInput = Input.GetAxisRaw("Horizontal");
+        verticalInput = Input.GetAxisRaw("Vertical");
 
+        HandleFlight();
         // Ground check
+
         Debug.Log(groundCheckRadius);
         isGrounded = Physics2D.OverlapCircle(
             groundCheck.position,
@@ -49,9 +73,91 @@ public class PlayerController2D : MonoBehaviour
         }
     }
 
+    private void HandleFlight()
+    {
+        if (cooldownTimer > 0)
+        {
+            cooldownTimer -= Time.deltaTime;
+        }
+
+        if (Input.GetKeyDown(flyKey)
+            && canFly
+            && cooldownTimer <= 0
+            && flyTimer > 0)
+        {
+            isFlying = true;
+        }
+        /**
+        if (Input.GetKeyUp(flyKey))
+        {
+            StopFlying();
+        }
+        */
+        if (isFlying)
+        {
+            flyTimer -= Time.deltaTime;
+
+            if (flyTimer <= 0)
+            {
+                StopFlying();
+            }
+        }
+
+        if (isGrounded && !isFlying)
+        {
+            flyTimer = flyDuration;
+        }
+
+    }
+
+    private void StopFlying()
+    {
+        void StopFlying()
+        {
+            isFlying = false;
+
+            cooldownTimer = flyCooldown;
+        }
+    }
+
     void FixedUpdate()
     {
-        Move();
+        if (isFlying)
+        {
+            GlideMovement();
+        }
+        else
+        {
+            Move();
+        }
+    }
+
+    private void GlideMovement()
+    {
+        void GlideMovement()
+        {
+            rb.gravityScale = 0f;
+
+            float verticalVelocity;
+
+            if (verticalInput > 0)
+            {
+                verticalVelocity = glideVerticalSpeed;
+            }
+            else if (verticalInput < 0)
+            {
+                verticalVelocity = -glideVerticalSpeed;
+            }
+            else
+            {
+                verticalVelocity = glideFallSpeed;
+            }
+
+            rb.linearVelocity = new Vector2(
+                moveInput * glideMoveSpeed,
+                verticalVelocity
+            );
+        }
     }
 
     void Move()
