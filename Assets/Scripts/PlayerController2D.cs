@@ -21,10 +21,16 @@ public class PlayerController2D : MonoBehaviour
     private Rigidbody2D rb;
     private float moveInput;
     private bool isGrounded;
+    private bool facingRight = true; 
+
+    // yürüme animasyonu
+    private Animator walking; 
+
 
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        walking = GetComponent<Animator>();
     }
 
     void Update()
@@ -41,7 +47,34 @@ public class PlayerController2D : MonoBehaviour
         {
             Jump();
         }
+
+        //Flip
+        if (moveInput==1 &!facingRight)
+        {
+            Flip();
+        }  
+
+        else if (moveInput==-1 & facingRight)
+        {
+            Flip();
+        } 
+
+        //Walking
+        /*
+        if (moveInput != 0)
+        {
+            animator.SetBool("isWalking", true);
+        }
+        else
+        {
+            animator.SetBool("isWalking", false);
+        }     
+        */
     }
+
+
+
+
 
     void FixedUpdate()
     {
@@ -95,5 +128,14 @@ public class PlayerController2D : MonoBehaviour
         Gizmos.color = Color.red;
         Gizmos.DrawLine(transform.position, transform.position + Vector3.left * wallCheckDistance);
         Gizmos.DrawLine(transform.position, transform.position + Vector3.right * wallCheckDistance);
+    }
+
+    // sağa sola döndür
+    void Flip()
+    {
+        facingRight = !facingRight;
+        Vector3 currentScale = transform.localScale;
+        currentScale.x *= -1;
+        transform.localScale = currentScale;
     }
 }
