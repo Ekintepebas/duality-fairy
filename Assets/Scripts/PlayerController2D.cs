@@ -6,21 +6,21 @@ public class PlayerController2D : MonoBehaviour
     public float moveSpeed = 6f;
     public float jumpForce = 12f;
 
-    public float flyTime = 3;
-    public float presentFlyingTime;
-    public bool isFlying = false;
-    public int level;
-    private float normalGravity;
+    [Header("Flight Mechanics")]
+    public int level = 1;
     public float cooldownTime = 3f;
+    public bool isFlying = false;
+    public float presentFlyingTime;
+    
+    private float flyTime = 0f;
     private float cooldownTimer = 0f;
+    private float normalGravity;
 
     [Header("Ground Check")]
-    public Transform groundCheck; // z4 branch'inden gelen değişkenler
-    public float groundCheckRadius = 0.2f;
     public LayerMask groundLayer;
-
     private float coyoteTime = 0.15f;
     private float coyoteCounter;
+
     [Header("Wall Check")]
     public float wallCheckDistance = 0.2f;
 
@@ -28,6 +28,7 @@ public class PlayerController2D : MonoBehaviour
     [HideInInspector]
     public Vector2 windForce;
 
+    // Bileşenler
     private Rigidbody2D rb;
     private Collider2D col;
     private Animator animator;
@@ -36,83 +37,95 @@ public class PlayerController2D : MonoBehaviour
     private bool isGrounded;
     private bool facingRight = true;
 
-    // yürüme animasyonu
-    private Animator walking;
-
-
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        animator = GetComponent<Animator>();
+        col = GetComponent<Collider2D>();
+        
         normalGravity = rb.gravityScale;
-        level = 1;
     }
 
     void Update()
     {
+        // Girdileri Alıyoruz
         moveInput = Input.GetAxisRaw("Horizontal");
 
-        // z4 branch'indeki OverlapCircle zemin kontrolü
-        isGrounded = Physics2D.OverlapCircle(
-            groundCheck.position,
-            groundCheckRadius,
+        // 1. ZEMİN KONTROLÜ (BoxCast - İlk koddaki gelişmiş versiyon)
+        Vector2 boxSize = new Vector2(col.bounds.size.x * 0.7f, 0.08f);
+        RaycastHit2D hit = Physics2D.BoxCast(
+            col.bounds.center,
+            boxSize,
+            0f,
+            Vector2.down,
+            col.bounds.extents.y + 0.08f,
             groundLayer
         );
 
-        if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
+        bool zeminTemasi = hit.collider != null;
+
+        // Coyote Time Hesaplaması
+        if (zeminTemasi)
+        {
+            coyoteCounter = coyoteTime;
+            isGrounded = true;
+        }
+        else
+        {
+            coyoteCounter -= Time.deltaTime;
+            if (coyoteCounter < 0f)
+                isGrounded = false;
+        }
+
+        // 2. ZIPLAMA (Uçmuyorsa ve Coyote Time aktifse)
+        if (Input.GetKeyDown(KeyCode.Space) && coyoteCounter > 0f && !isFlying)
         {
             Jump();
         }
 
-        // Flip (Yön değiştirme)
-        if (moveInput == 1 && !facingRight)
-        {
-            Flip();
-        }
-        else if (moveInput == -1 && facingRight)
-        {
-            Flip();
-        }
+        // 3. YÖN DEĞİŞTİRME (Flip)
+        if (moveInput > 0 && !facingRight) Flip();
+        else if (moveInput < 0 && facingRight) Flip();
 
-        // Fly (Uçma Mekaniği)
+        // 4. UÇMA SÜRESİ VE COOLDOWN HESAPLAMA
         if (cooldownTimer > 0f)
         {
             cooldownTimer -= Time.deltaTime;
         }
 
-        if (level == 1)
+        // Seviyeye göre uçuş süresi belirleme
+        switch (level)
         {
-            flyTime = 0f;
-        }
-        else if (level == 2)
-        {
-            flyTime = 5f;
-        }
-        else if (level == 3)
-        {
-            flyTime = 10f;
-        }
-        else
-        {
-            flyTime = Mathf.Infinity;
+            case 1: flyTime = 0f; break;
+            case 2: flyTime = 5f; break;
+            case 3: flyTime = 10f; break;
+            default: flyTime = Mathf.Infinity; break;
         }
 
-        if (Input.GetKey(KeyCode.P) && !isFlying && cooldownTimer <= 0f && level >= 2)
+        // Uçuşu Başlatma (P tuşu, bekleme süresi bittiyse ve Level 2+ ise)
+        if (Input.GetKeyDown(KeyCode.P) && !isFlying && cooldownTimer <= 0f && level >= 2)
         {
             isFlying = true;
             presentFlyingTime = 0f;
         }
 
+        // Uçuş Süresi Kontrolü
         if (isFlying)
         {
             presentFlyingTime += Time.deltaTime;
 
             if (presentFlyingTime >= flyTime)
             {
-                isFlying = false;
-                rb.gravityScale = normalGravity;
-                cooldownTimer = cooldownTime;
+                StopFlying();
             }
         }
+
+        // 5. ANIMATOR KONTROLLERİ (Flicker/Kırpışma önleyen mantık)
+        bool yururken = moveInput != 0 && isGrounded && !isFlying;
+        
+        animator.SetBool("isGrounded", isGrounded);
+        animator.SetBool("isWalking", yururken);
+        animator.SetBool("isFlying", isFlying); // Eğer animator'da varsa kullanırsın
     }
 
     void FixedUpdate()
@@ -125,9 +138,9 @@ public class PlayerController2D : MonoBehaviour
         if (isFlying)
         {
             float verticalInput = Input.GetAxisRaw("Vertical");
-
             rb.gravityScale = 0;
 
+            // Uçarken dikey ve yatay hareket + rüzgar
             rb.linearVelocity = new Vector2(
                 moveInput * moveSpeed + windForce.x,
                 verticalInput * moveSpeed + windForce.y
@@ -135,11 +148,10 @@ public class PlayerController2D : MonoBehaviour
         }
         else
         {
-            Vector2 finalWind = windForce;
-
+            // Normal yürürken yatay hareket + ruced, dikeyde yerçekimi + rüzgar y
             rb.linearVelocity = new Vector2(
-                moveInput * moveSpeed + finalWind.x,
-                rb.linearVelocity.y + finalWind.y
+                moveInput * moveSpeed + windForce.x,
+                rb.linearVelocity.y + windForce.y
             );
         }
     }
@@ -149,6 +161,13 @@ public class PlayerController2D : MonoBehaviour
         rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
         coyoteCounter = 0f;
         isGrounded = false;
+    }
+
+    void StopFlying()
+    {
+        isFlying = false;
+        rb.gravityScale = normalGravity;
+        cooldownTimer = cooldownTime;
     }
 
     void Flip()
@@ -161,12 +180,15 @@ public class PlayerController2D : MonoBehaviour
 
     void OnDrawGizmosSelected()
     {
-        if (groundCheck != null)
-        {
-            Gizmos.color = Color.yellow;
-            Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
-        }
+        if (col == null) return;
 
+        // Sarı renkli BoxCast Zemin Kontrol Alanı çizimi
+        Gizmos.color = Color.yellow;
+        Vector2 boxSize = new Vector2(col.bounds.size.x * 0.7f, 0.08f);
+        Vector3 boxCenter = col.bounds.center + Vector3.down * (col.bounds.extents.y + 0.04f);
+        Gizmos.DrawWireCube(boxCenter, boxSize);
+
+        // Kırmızı renkli Duvar Kontrol Çizgileri
         Gizmos.color = Color.red;
         Gizmos.DrawLine(transform.position, transform.position + Vector3.left * wallCheckDistance);
         Gizmos.DrawLine(transform.position, transform.position + Vector3.right * wallCheckDistance);
