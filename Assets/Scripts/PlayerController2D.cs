@@ -51,7 +51,7 @@ public class PlayerController2D : MonoBehaviour
 
     void Update()
     {
-        Debug.Log(isGrounded);
+        //Debug.Log(isGrounded);
         // Input
         moveInput = Input.GetAxisRaw("Horizontal");
         verticalInput = Input.GetAxisRaw("Vertical");
@@ -59,7 +59,7 @@ public class PlayerController2D : MonoBehaviour
         HandleFlight();
         // Ground check
 
-        Debug.Log(groundCheckRadius);
+        //Debug.Log(groundCheckRadius);
         isGrounded = Physics2D.OverlapCircle(
             groundCheck.position,
             groundCheckRadius,
