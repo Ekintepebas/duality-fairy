@@ -63,6 +63,7 @@ public class PlayerController2D : MonoBehaviour
     {
         // Girdileri Alıyoruz
         moveInput = Input.GetAxisRaw("Horizontal");
+        verticalInput = Input.GetAxisRaw("Vertical");
 
         // 1. ZEMİN KONTROLÜ (BoxCast)
         Vector2 boxSize = new Vector2(col.bounds.size.x * 0.7f, 0.08f);
@@ -145,9 +146,91 @@ public class PlayerController2D : MonoBehaviour
         UpdateFlightSlider(); 
     }
 
+    private void HandleFlight()
+    {
+        if (cooldownTimer > 0)
+        {
+            cooldownTimer -= Time.deltaTime;
+        }
+
+        if (Input.GetKeyDown(flyKey)
+            && canFly
+            && cooldownTimer <= 0
+            && flyTimer > 0)
+        {
+            isFlying = true;
+        }
+        /**
+        if (Input.GetKeyUp(flyKey))
+        {
+            StopFlying();
+        }
+        */
+        if (isFlying)
+        {
+            flyTimer -= Time.deltaTime;
+
+            if (flyTimer <= 0)
+            {
+                StopFlying();
+            }
+        }
+
+        if (isGrounded && !isFlying)
+        {
+            flyTimer = flyDuration;
+        }
+
+    }
+
+    private void StopFlying()
+    {
+        void StopFlying()
+        {
+            isFlying = false;
+
+            cooldownTimer = flyCooldown;
+        }
+    }
+
     void FixedUpdate()
     {
-        Move();
+        if (isFlying)
+        {
+            GlideMovement();
+        }
+        else
+        {
+            Move();
+        }
+    }
+
+    private void GlideMovement()
+    {
+        void GlideMovement()
+        {
+            rb.gravityScale = 0f;
+
+            float verticalVelocity;
+
+            if (verticalInput > 0)
+            {
+                verticalVelocity = glideVerticalSpeed;
+            }
+            else if (verticalInput < 0)
+            {
+                verticalVelocity = -glideVerticalSpeed;
+            }
+            else
+            {
+                verticalVelocity = glideFallSpeed;
+            }
+
+            rb.linearVelocity = new Vector2(
+                moveInput * glideMoveSpeed,
+                verticalVelocity
+            );
+        }
     }
 
     void Move()
