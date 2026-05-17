@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI; // SLIDER EKLENTİSİ: Arayüz elemanları için eklendi
 
 public class PlayerController2D : MonoBehaviour
 {
@@ -29,6 +30,9 @@ public class PlayerController2D : MonoBehaviour
     [HideInInspector]
     public Vector2 windForce;
 
+    [Header("UI")]
+    public Slider flightSlider; // SLIDER EKLENTİSİ: Uçuş barı değişkeni
+
     // Bileşenler
     private Rigidbody2D rb;
     private Collider2D col;
@@ -49,7 +53,6 @@ public class PlayerController2D : MonoBehaviour
 
     void Start()
     {
-        // Eğer Unity Inspector panelinde "Ground Layer" seçilmemişse Konsola hata mesajı gönder.
         if (groundLayer.value == 0)
         {
             Debug.LogError("DİKKAT: 'Ground Layer' seçilmemiş! Yürüme animasyonunun çalışması için Inspector'dan Player'a tıklayın, Ground Layer kısmını 'Default' (veya zemin katmanınız neyse) olarak seçin.");
@@ -108,7 +111,8 @@ public class PlayerController2D : MonoBehaviour
             case 1: flyTime = 0f; break;
             case 2: flyTime = 5f; break;
             case 3: flyTime = 10f; break;
-            default: flyTime = Mathf.Infinity; break;
+            // SLIDER EKLENTİSİ: Sonsuz (Infinity) UI Slider'ı bozacağı için yerine yüksek bir değer veriyoruz
+            default: flyTime = 9999f; break; 
         }
 
         if (Input.GetKeyDown(KeyCode.P) && !isFlying && cooldownTimer <= 0f && level >= 2)
@@ -136,6 +140,9 @@ public class PlayerController2D : MonoBehaviour
             animator.SetBool("isWalking", yururken);
             animator.SetBool("isFlying", isFlying);
         }
+
+        // SLIDER EKLENTİSİ: Her frame'de slider'ı günceller
+        UpdateFlightSlider(); 
     }
 
     void FixedUpdate()
@@ -184,6 +191,32 @@ public class PlayerController2D : MonoBehaviour
         Vector3 scale = transform.localScale;
         scale.x *= -1;
         transform.localScale = scale;
+    }
+
+    // SLIDER EKLENTİSİ: Slider değerlerini hesaplayan ve UI'a yansıtan metod
+    void UpdateFlightSlider()
+    {
+        if (flightSlider != null && level >= 2)
+        {
+            flightSlider.maxValue = flyTime;
+
+            if (isFlying)
+            {
+                // Uçarken enerji barı azalır
+                flightSlider.value = flyTime - presentFlyingTime;
+            }
+            else if (cooldownTimer > 0f)
+            {
+                // Bekleme süresindeyken enerji barı yavaşça dolar
+                float cooldownProgress = 1f - (cooldownTimer / cooldownTime);
+                flightSlider.value = cooldownProgress * flyTime;
+            }
+            else
+            {
+                // Uçuşa hazırsa bar tam doludur
+                flightSlider.value = flyTime;
+            }
+        }
     }
 
     void OnDrawGizmosSelected()
