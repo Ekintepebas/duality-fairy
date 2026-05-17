@@ -137,7 +137,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &14237100
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -214,6 +214,7 @@ RectTransform:
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 1897243025}
   - {fileID: 1658693105}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1036,7 +1037,7 @@ Camera:
   far clip plane: 1000
   field of view: 34
   orthographic: 1
-  orthographic size: 13.633937
+  orthographic size: 11
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -1061,7 +1062,7 @@ Transform:
   m_GameObject: {fileID: 519420028}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -27.64, y: -13.85, z: -10}
+  m_LocalPosition: {x: -29.1, y: -15.2, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1916,7 +1917,7 @@ MonoBehaviour:
     CustomLookAtTarget: 0
   Lens:
     FieldOfView: 34
-    OrthographicSize: 13.633937
+    OrthographicSize: 11
     NearClipPlane: 0.3
     FarClipPlane: 1000
     Dutch: 0
@@ -1943,7 +1944,7 @@ Transform:
   m_GameObject: {fileID: 1196792277}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -27.64, y: -13.85, z: -10}
+  m_LocalPosition: {x: -29.1, y: -15.2, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2053,6 +2054,7 @@ GameObject:
   - component: {fileID: 1218554432}
   - component: {fileID: 1218554434}
   - component: {fileID: 1218554433}
+  - component: {fileID: 1218554435}
   m_Layer: 0
   m_Name: FlowerParent
   m_TagString: Untagged
@@ -2090,6 +2092,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 63cc95f15117b1942a1c763fde949e1c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::End
+  nextSceneName: Level2
+  fadeDuration: 2
+  fadeImage: {fileID: 1897243026}
 --- !u!61 &1218554434
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -2120,7 +2125,7 @@ BoxCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
@@ -2136,6 +2141,23 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 1.8067274, y: 1.7282953}
   m_EdgeRadius: 0
+--- !u!114 &1218554435
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1218554430}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 065fe24b97880114896be5badd511d29, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FadeFlower
+  flowers:
+  - {fileID: 507970421}
+  - {fileID: 137825210}
+  - {fileID: 1240551181}
+  fadeDuration: 1
 --- !u!1 &1240551179
 GameObject:
   m_ObjectHideFlags: 0
@@ -2440,7 +2462,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1658693105
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2682,8 +2704,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 16afc77bf1342194ebd25afb9afb7b48, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController2D
-  moveSpeed: 6
-  jumpForce: 12
+  moveSpeed: 12
+  jumpForce: 18
   level: 2
   cooldownTime: 3
   isFlying: 0
@@ -2789,7 +2811,7 @@ Transform:
   m_GameObject: {fileID: 1805709898}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -27.64, y: -13.85, z: 0}
+  m_LocalPosition: {x: -29.1, y: -15.2, z: 0}
   m_LocalScale: {x: 0.301125, y: 0.301125, z: 0.301125}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -5499,6 +5521,81 @@ TilemapCollider2D:
   m_MaximumTileChangeCount: 1000
   m_ExtrusionFactor: 0
   m_UseDelaunayMesh: 0
+--- !u!1 &1897243024
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1897243025}
+  - component: {fileID: 1897243027}
+  - component: {fileID: 1897243026}
+  m_Layer: 0
+  m_Name: FadePanel
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!224 &1897243025
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1897243024}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 14237103}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 10000, y: 10000}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1897243026
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1897243024}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 0}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &1897243027
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1897243024}
+  m_CullTransparentMesh: 1
 --- !u!1 &1899077132
 GameObject:
   m_ObjectHideFlags: 0
