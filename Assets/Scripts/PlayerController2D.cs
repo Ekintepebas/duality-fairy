@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayerController2D : MonoBehaviour
 {
@@ -6,13 +7,17 @@ public class PlayerController2D : MonoBehaviour
     public float moveSpeed = 6f;
     public float jumpForce = 12f;
 
-    public float flyTime = 3;
+    public float flyTime;
     public float presentFlyingTime;
     public bool isFlying = false;
-    public int level;
+    public int level = 2;
     private float normalGravity;
     public float cooldownTime = 3f;
     private float cooldownTimer = 0f;
+
+
+    [Header("UI")]
+    public Slider abilityBar;
 
     [Header("Ground Check")]
     public Transform groundCheck;
@@ -90,7 +95,7 @@ public class PlayerController2D : MonoBehaviour
         {
             flyTime = Mathf.Infinity;
         }
-        if (Input.GetKey(KeyCode.P) && !isFlying && cooldownTimer <= 0f && level >= 2)
+        if (Input.GetKeyDown(KeyCode.P) && !isFlying && cooldownTimer <= 0f && level >= 2)
         {
             isFlying = true;
             presentFlyingTime = 0f;
@@ -107,7 +112,38 @@ public class PlayerController2D : MonoBehaviour
                 cooldownTimer = cooldownTime;
             }
         }
+        UpdateUIBars();
+    }
 
+    void UpdateUIBars()
+    {
+        if (abilityBar == null) return;
+
+        if (level == 1)
+        {
+            abilityBar.value = 0f;
+            return;
+        }
+
+        if (isFlying)
+        {
+            if (level >= 4)
+            {
+                abilityBar.value = 1f;
+            }
+            else
+            {
+                abilityBar.value = 1f - (presentFlyingTime / flyTime);
+            }
+        }
+        else if (cooldownTimer > 0f)
+        {
+            abilityBar.value = 1f - (cooldownTimer / cooldownTime);
+        }
+        else
+        {
+            abilityBar.value = 1f;
+        }
     }
 
     void FixedUpdate()
