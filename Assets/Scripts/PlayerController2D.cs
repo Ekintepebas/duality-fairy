@@ -12,7 +12,7 @@ public class PlayerController2D : MonoBehaviour
     public float cooldownTime = 3f;
     public bool isFlying = false;
     public float presentFlyingTime;
-    
+
     private float flyTime = 0f;
     private float cooldownTimer = 0f;
     private float normalGravity;
@@ -47,7 +47,7 @@ public class PlayerController2D : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
         col = GetComponent<Collider2D>();
-        
+
         normalGravity = rb.gravityScale;
     }
 
@@ -63,7 +63,6 @@ public class PlayerController2D : MonoBehaviour
     {
         // Girdileri Alıyoruz
         moveInput = Input.GetAxisRaw("Horizontal");
-        verticalInput = Input.GetAxisRaw("Vertical");
 
         // 1. ZEMİN KONTROLÜ (BoxCast)
         Vector2 boxSize = new Vector2(col.bounds.size.x * 0.7f, 0.08f);
@@ -113,7 +112,7 @@ public class PlayerController2D : MonoBehaviour
             case 2: flyTime = 5f; break;
             case 3: flyTime = 10f; break;
             // SLIDER EKLENTİSİ: Sonsuz (Infinity) UI Slider'ı bozacağı için yerine yüksek bir değer veriyoruz
-            default: flyTime = 9999f; break; 
+            default: flyTime = 9999f; break;
         }
 
         if (Input.GetKeyDown(KeyCode.P) && !isFlying && cooldownTimer <= 0f && level >= 2)
@@ -134,103 +133,21 @@ public class PlayerController2D : MonoBehaviour
 
         // 5. ANIMATOR KONTROLLERİ
         bool yururken = moveInput != 0 && isGrounded && !isFlying;
-        
+
         if (animator != null)
         {
             animator.SetBool("isGrounded", isGrounded);
             animator.SetBool("isWalking", yururken);
-            animator.SetBool("isFlying", isFlying);
+            //animator.SetBool("isFlying", isFlying);
         }
 
         // SLIDER EKLENTİSİ: Her frame'de slider'ı günceller
-        UpdateFlightSlider(); 
-    }
-
-    private void HandleFlight()
-    {
-        if (cooldownTimer > 0)
-        {
-            cooldownTimer -= Time.deltaTime;
-        }
-
-        if (Input.GetKeyDown(flyKey)
-            && canFly
-            && cooldownTimer <= 0
-            && flyTimer > 0)
-        {
-            isFlying = true;
-        }
-        /**
-        if (Input.GetKeyUp(flyKey))
-        {
-            StopFlying();
-        }
-        */
-        if (isFlying)
-        {
-            flyTimer -= Time.deltaTime;
-
-            if (flyTimer <= 0)
-            {
-                StopFlying();
-            }
-        }
-
-        if (isGrounded && !isFlying)
-        {
-            flyTimer = flyDuration;
-        }
-
-    }
-
-    private void StopFlying()
-    {
-        void StopFlying()
-        {
-            isFlying = false;
-
-            cooldownTimer = flyCooldown;
-        }
+        UpdateFlightSlider();
     }
 
     void FixedUpdate()
     {
-        if (isFlying)
-        {
-            GlideMovement();
-        }
-        else
-        {
-            Move();
-        }
-    }
-
-    private void GlideMovement()
-    {
-        void GlideMovement()
-        {
-            rb.gravityScale = 0f;
-
-            float verticalVelocity;
-
-            if (verticalInput > 0)
-            {
-                verticalVelocity = glideVerticalSpeed;
-            }
-            else if (verticalInput < 0)
-            {
-                verticalVelocity = -glideVerticalSpeed;
-            }
-            else
-            {
-                verticalVelocity = glideFallSpeed;
-            }
-
-            rb.linearVelocity = new Vector2(
-                moveInput * glideMoveSpeed,
-                verticalVelocity
-            );
-        }
+        Move();
     }
 
     void Move()
