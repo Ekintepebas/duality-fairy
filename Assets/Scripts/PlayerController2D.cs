@@ -1,5 +1,5 @@
 using UnityEngine;
-using UnityEngine.UI; // SLIDER EKLENTİSİ: Arayüz elemanları için eklendi
+using UnityEngine.UI;
 
 public class PlayerController2D : MonoBehaviour
 {
@@ -31,9 +31,12 @@ public class PlayerController2D : MonoBehaviour
     public Vector2 windForce;
 
     [Header("UI")]
-    public Slider flightSlider; // SLIDER EKLENTİSİ: Uçuş barı değişkeni
+    public Slider flightSlider;
 
-    // Bileşenler
+    [Header("Görev Sistemi")]
+    public int hedefKelebekSayisi = 3;
+    public int yakalananKelebekSayisi = 0;
+
     private Rigidbody2D rb;
     private Collider2D col;
     private Animator animator;
@@ -47,7 +50,6 @@ public class PlayerController2D : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
         col = GetComponent<Collider2D>();
-
         normalGravity = rb.gravityScale;
     }
 
@@ -55,16 +57,15 @@ public class PlayerController2D : MonoBehaviour
     {
         if (groundLayer.value == 0)
         {
-            Debug.LogError("DİKKAT: 'Ground Layer' seçilmemiş! Yürüme animasyonunun çalışması için Inspector'dan Player'a tıklayın, Ground Layer kısmını 'Default' (veya zemin katmanınız neyse) olarak seçin.");
+            Debug.LogError("DİKKAT: 'Ground Layer' seçilmemiş! Inspector'dan Ground Layer'ı ayarlayın.");
         }
     }
 
     void Update()
     {
-        // Girdileri Alıyoruz
         moveInput = Input.GetAxisRaw("Horizontal");
 
-        // 1. ZEMİN KONTROLÜ (BoxCast)
+        // 1. ZEMİN KONTROLÜ
         Vector2 boxSize = new Vector2(col.bounds.size.x * 0.7f, 0.08f);
         RaycastHit2D hit = Physics2D.BoxCast(
             col.bounds.center,
@@ -77,7 +78,6 @@ public class PlayerController2D : MonoBehaviour
 
         bool zeminTemasi = hit.collider != null;
 
-        // Coyote Time Hesaplaması
         if (zeminTemasi)
         {
             coyoteCounter = coyoteTime;
@@ -111,7 +111,6 @@ public class PlayerController2D : MonoBehaviour
             case 1: flyTime = 0f; break;
             case 2: flyTime = 5f; break;
             case 3: flyTime = 10f; break;
-            // SLIDER EKLENTİSİ: Sonsuz (Infinity) UI Slider'ı bozacağı için yerine yüksek bir değer veriyoruz
             default: flyTime = 9999f; break;
         }
 
@@ -131,17 +130,15 @@ public class PlayerController2D : MonoBehaviour
             }
         }
 
-        // 5. ANIMATOR KONTROLLERİ
+        // 5. ANIMATOR
         bool yururken = moveInput != 0 && isGrounded && !isFlying;
 
         if (animator != null)
         {
             animator.SetBool("isGrounded", isGrounded);
             animator.SetBool("isWalking", yururken);
-            //animator.SetBool("isFlying", isFlying);
         }
 
-        // SLIDER EKLENTİSİ: Her frame'de slider'ı günceller
         UpdateFlightSlider();
     }
 
@@ -164,6 +161,7 @@ public class PlayerController2D : MonoBehaviour
         }
         else
         {
+            rb.gravityScale = normalGravity;
             rb.linearVelocity = new Vector2(
                 moveInput * moveSpeed + windForce.x,
                 rb.linearVelocity.y + windForce.y
@@ -185,15 +183,17 @@ public class PlayerController2D : MonoBehaviour
         cooldownTimer = cooldownTime;
     }
 
-    void Flip()
+    public void KelebekYakala()
     {
-        facingRight = !facingRight;
-        Vector3 scale = transform.localScale;
-        scale.x *= -1;
-        transform.localScale = scale;
+        yakalananKelebekSayisi++;
+        Debug.Log("Kelebek Yakalandı! Toplam: " + yakalananKelebekSayisi + " / " + hedefKelebekSayisi);
+
+        if (yakalananKelebekSayisi >= hedefKelebekSayisi)
+        {
+            Debug.Log("GÖREV TAMAMLANDI! Tüm kelebekleri topladın!");
+        }
     }
 
-    // SLIDER EKLENTİSİ: Slider değerlerini hesaplayan ve UI'a yansıtan metod
     void UpdateFlightSlider()
     {
         if (flightSlider != null && level >= 2)
@@ -202,21 +202,26 @@ public class PlayerController2D : MonoBehaviour
 
             if (isFlying)
             {
-                // Uçarken enerji barı azalır
                 flightSlider.value = flyTime - presentFlyingTime;
             }
             else if (cooldownTimer > 0f)
             {
-                // Bekleme süresindeyken enerji barı yavaşça dolar
                 float cooldownProgress = 1f - (cooldownTimer / cooldownTime);
                 flightSlider.value = cooldownProgress * flyTime;
             }
             else
             {
-                // Uçuşa hazırsa bar tam doludur
                 flightSlider.value = flyTime;
             }
         }
+    }
+
+    void Flip()
+    {
+        facingRight = !facingRight;
+        Vector3 scale = transform.localScale;
+        scale.x *= -1;
+        transform.localScale = scale;
     }
 
     void OnDrawGizmosSelected()
