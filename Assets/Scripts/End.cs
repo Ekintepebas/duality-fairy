@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class End : MonoBehaviour
 {
-    [SerializeField] private string nextSceneName = "Level2";
+    [SerializeField] private string nextSceneName = "lv2bensu";
     [SerializeField] private float fadeDuration = 2f;
 
     [SerializeField] public Image fadeImage;
@@ -31,6 +31,6 @@ public class End : MonoBehaviour
             yield return null;
         }
 
-        SceneManager.LoadScene(nextSceneName);
+        SceneManager.LoadScene("lv2bensu");
     }
 }
