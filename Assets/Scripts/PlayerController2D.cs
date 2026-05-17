@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.UI; // SLIDER EKLENTİSİ: Arayüz elemanları için eklendi
 
 public class PlayerController2D : MonoBehaviour
 {
@@ -7,312 +6,134 @@ public class PlayerController2D : MonoBehaviour
     public float moveSpeed = 6f;
     public float jumpForce = 12f;
 
-    [Header("Flight Mechanics")]
-    public int level = 1;
-    public float cooldownTime = 3f;
-    public bool isFlying = false;
-    public float presentFlyingTime;
-    
-    private float flyTime = 0f;
-    private float cooldownTimer = 0f;
-    private float normalGravity;
-
     [Header("Ground Check")]
-    [Tooltip("Inspector'dan Zemin Katmanını seçmeyi UNUTMAYIN!")]
+    public Transform groundCheck;
+    public float groundCheckRadius = 0.2f;
     public LayerMask groundLayer;
-    private float coyoteTime = 0.15f;
-    private float coyoteCounter;
 
-    [Header("Wall Check")]
-    public float wallCheckDistance = 0.2f;
+    private Rigidbody2D rb;
+    private float moveInput;
+    private float verticalInput;
+    private bool isGrounded;
+    private bool facingRight = true; 
 
-    [Header("Wind")]
+    [Header("Görev Sistemi")]
+    public int yakalananKelebekSayisi = 0;
+    public int hedefKelebekSayisi = 3;
+
+    [Header("Uçuş Sistemi (7sn Uçuş, 3sn Dinlenme)")]
+    public bool isFlying = false;
+    public float maxFlightTime = 7f;       
+    public float flightTimer;              
+    public float cooldownTime = 3f;        
+    public float cooldownTimer = 0f;       
+    private float originalGravity;
+
+    // EKSİK OLAN RÜZGAR BAĞLANTILARI BURAYA EKLENDİ
+    [Header("Wind (Rüzgar Ayarı)")]
+    public bool isInWindZone;
     [HideInInspector]
     public Vector2 windForce;
-
-    [Header("UI")]
-    public Slider flightSlider; // SLIDER EKLENTİSİ: Uçuş barı değişkeni
-
-    // Bileşenler
-    private Rigidbody2D rb;
-    private Collider2D col;
-    private Animator animator;
-
-    private float moveInput;
-    private bool isGrounded;
-    private bool facingRight = true;
 
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
-        animator = GetComponent<Animator>();
-        col = GetComponent<Collider2D>();
-        
-        normalGravity = rb.gravityScale;
-    }
-
-    void Start()
-    {
-        if (groundLayer.value == 0)
-        {
-            Debug.LogError("DİKKAT: 'Ground Layer' seçilmemiş! Yürüme animasyonunun çalışması için Inspector'dan Player'a tıklayın, Ground Layer kısmını 'Default' (veya zemin katmanınız neyse) olarak seçin.");
-        }
+        originalGravity = rb.gravityScale;
+        flightTimer = maxFlightTime;       
     }
 
     void Update()
     {
-        // Girdileri Alıyoruz
         moveInput = Input.GetAxisRaw("Horizontal");
         verticalInput = Input.GetAxisRaw("Vertical");
 
-        // 1. ZEMİN KONTROLÜ (BoxCast)
-        Vector2 boxSize = new Vector2(col.bounds.size.x * 0.7f, 0.08f);
-        RaycastHit2D hit = Physics2D.BoxCast(
-            col.bounds.center,
-            boxSize,
-            0f,
-            Vector2.down,
-            col.bounds.extents.y + 0.08f,
-            groundLayer
-        );
+        isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
 
-        bool zeminTemasi = hit.collider != null;
-
-        // Coyote Time Hesaplaması
-        if (zeminTemasi)
-        {
-            coyoteCounter = coyoteTime;
-            isGrounded = true;
-        }
-        else
-        {
-            coyoteCounter -= Time.deltaTime;
-            if (coyoteCounter < 0f)
-                isGrounded = false;
-        }
-
-        // 2. ZIPLAMA
-        if (Input.GetKeyDown(KeyCode.Space) && coyoteCounter > 0f && !isFlying)
+        if (Input.GetKeyDown(KeyCode.Space) && isGrounded && !isFlying)
         {
             Jump();
         }
 
-        // 3. YÖN DEĞİŞTİRME
-        if (moveInput > 0 && !facingRight) Flip();
-        else if (moveInput < 0 && facingRight) Flip();
+        if (moveInput == 1 && !facingRight) Flip();
+        else if (moveInput == -1 && facingRight) Flip();
 
-        // 4. UÇMA KONTROLÜ
-        if (cooldownTimer > 0f)
-        {
-            cooldownTimer -= Time.deltaTime;
-        }
-
-        switch (level)
-        {
-            case 1: flyTime = 0f; break;
-            case 2: flyTime = 5f; break;
-            case 3: flyTime = 10f; break;
-            // SLIDER EKLENTİSİ: Sonsuz (Infinity) UI Slider'ı bozacağı için yerine yüksek bir değer veriyoruz
-            default: flyTime = 9999f; break; 
-        }
-
-        if (Input.GetKeyDown(KeyCode.P) && !isFlying && cooldownTimer <= 0f && level >= 2)
-        {
-            isFlying = true;
-            presentFlyingTime = 0f;
-        }
-
-        if (isFlying)
-        {
-            presentFlyingTime += Time.deltaTime;
-
-            if (presentFlyingTime >= flyTime)
-            {
-                StopFlying();
-            }
-        }
-
-        // 5. ANIMATOR KONTROLLERİ
-        bool yururken = moveInput != 0 && isGrounded && !isFlying;
-        
-        if (animator != null)
-        {
-            animator.SetBool("isGrounded", isGrounded);
-            animator.SetBool("isWalking", yururken);
-            animator.SetBool("isFlying", isFlying);
-        }
-
-        // SLIDER EKLENTİSİ: Her frame'de slider'ı günceller
-        UpdateFlightSlider(); 
-    }
-
-    private void HandleFlight()
-    {
+        // --- UÇUŞ DÖNGÜSÜ ---
         if (cooldownTimer > 0)
         {
             cooldownTimer -= Time.deltaTime;
-        }
-
-        if (Input.GetKeyDown(flyKey)
-            && canFly
-            && cooldownTimer <= 0
-            && flyTimer > 0)
-        {
-            isFlying = true;
-        }
-        /**
-        if (Input.GetKeyUp(flyKey))
-        {
-            StopFlying();
-        }
-        */
-        if (isFlying)
-        {
-            flyTimer -= Time.deltaTime;
-
-            if (flyTimer <= 0)
-            {
-                StopFlying();
-            }
-        }
-
-        if (isGrounded && !isFlying)
-        {
-            flyTimer = flyDuration;
-        }
-
-    }
-
-    private void StopFlying()
-    {
-        void StopFlying()
-        {
             isFlying = false;
+        }
+        else 
+        {
+            if (Input.GetKey(KeyCode.F) && flightTimer > 0)
+            {
+                isFlying = true;
+                flightTimer -= Time.deltaTime; 
 
-            cooldownTimer = flyCooldown;
+                if (flightTimer <= 0)
+                {
+                    cooldownTimer = cooldownTime;
+                    isFlying = false;
+                    flightTimer = maxFlightTime; 
+                }
+            }
+            else
+            {
+                isFlying = false;
+            }
         }
     }
 
     void FixedUpdate()
     {
-        if (isFlying)
-        {
-            GlideMovement();
-        }
-        else
-        {
-            Move();
-        }
-    }
-
-    private void GlideMovement()
-    {
-        void GlideMovement()
-        {
-            rb.gravityScale = 0f;
-
-            float verticalVelocity;
-
-            if (verticalInput > 0)
-            {
-                verticalVelocity = glideVerticalSpeed;
-            }
-            else if (verticalInput < 0)
-            {
-                verticalVelocity = -glideVerticalSpeed;
-            }
-            else
-            {
-                verticalVelocity = glideFallSpeed;
-            }
-
-            rb.linearVelocity = new Vector2(
-                moveInput * glideMoveSpeed,
-                verticalVelocity
-            );
-        }
+        Move();
     }
 
     void Move()
     {
         if (isFlying)
         {
-            float verticalInput = Input.GetAxisRaw("Vertical");
-            rb.gravityScale = 0;
-
-            rb.linearVelocity = new Vector2(
-                moveInput * moveSpeed + windForce.x,
-                verticalInput * moveSpeed + windForce.y
-            );
+            rb.gravityScale = 0; 
+            rb.linearVelocity = new Vector2(moveInput * moveSpeed, verticalInput * moveSpeed);
         }
         else
         {
-            rb.linearVelocity = new Vector2(
-                moveInput * moveSpeed + windForce.x,
-                rb.linearVelocity.y + windForce.y
-            );
+            rb.gravityScale = originalGravity; 
+            rb.linearVelocity = new Vector2(moveInput * moveSpeed, rb.linearVelocity.y);
         }
+
+        // RÜZGARIN GÜCÜNÜ HAREKETE DAHİL ET
+        rb.linearVelocity += windForce;
     }
 
     void Jump()
     {
         rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
-        coyoteCounter = 0f;
-        isGrounded = false;
     }
 
-    void StopFlying()
+    public void KelebekYakala()
     {
-        isFlying = false;
-        rb.gravityScale = normalGravity;
-        cooldownTimer = cooldownTime;
+        yakalananKelebekSayisi++;
+        Debug.Log("Kelebek Yakalandı! Toplam: " + yakalananKelebekSayisi);
+
+        if (yakalananKelebekSayisi >= hedefKelebekSayisi)
+        {
+            Debug.Log("GÖREV TAMAMLANDI! Parkurdaki 3 kelebeği de topladın!");
+        }
     }
 
     void Flip()
     {
         facingRight = !facingRight;
-        Vector3 scale = transform.localScale;
-        scale.x *= -1;
-        transform.localScale = scale;
-    }
-
-    // SLIDER EKLENTİSİ: Slider değerlerini hesaplayan ve UI'a yansıtan metod
-    void UpdateFlightSlider()
-    {
-        if (flightSlider != null && level >= 2)
-        {
-            flightSlider.maxValue = flyTime;
-
-            if (isFlying)
-            {
-                // Uçarken enerji barı azalır
-                flightSlider.value = flyTime - presentFlyingTime;
-            }
-            else if (cooldownTimer > 0f)
-            {
-                // Bekleme süresindeyken enerji barı yavaşça dolar
-                float cooldownProgress = 1f - (cooldownTimer / cooldownTime);
-                flightSlider.value = cooldownProgress * flyTime;
-            }
-            else
-            {
-                // Uçuşa hazırsa bar tam doludur
-                flightSlider.value = flyTime;
-            }
-        }
+        Vector3 currentScale = transform.localScale;
+        currentScale.x *= -1;
+        transform.localScale = currentScale;
     }
 
     void OnDrawGizmosSelected()
     {
-        if (col == null) return;
-
+        if (groundCheck == null) return;
         Gizmos.color = Color.yellow;
-        Vector2 boxSize = new Vector2(col.bounds.size.x * 0.7f, 0.08f);
-        Vector3 boxCenter = col.bounds.center + Vector3.down * (col.bounds.extents.y + 0.04f);
-        Gizmos.DrawWireCube(boxCenter, boxSize);
-
-        Gizmos.color = Color.red;
-        Gizmos.DrawLine(transform.position, transform.position + Vector3.left * wallCheckDistance);
-        Gizmos.DrawLine(transform.position, transform.position + Vector3.right * wallCheckDistance);
+        Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
     }
 }
